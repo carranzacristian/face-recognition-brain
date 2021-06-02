@@ -38,15 +38,33 @@ class App extends Component {
     this.state = {
       input: '',
       imageUrl: '',
-      box: {}
+      box: {},
+      imageWidth: null,
+		  imageHeight: null
     }
+  }
+  //Supposed to make bounding box responsive accordingly
+  //accordingly to the image
+  updateDims = () => {
+    const image = document.getElementById('inputImage');
+
+    this.setState({
+        imageWidth: Number(image.width),
+        imageHeight: Number(image.height)
+    });
+  }
+
+  componentDidMount() {
+      window.addEventListener('resize', this.updateDims);
+  }
+  componentWillUnmount() {
+      window.removeEventListener('resize', this.updateDims);
   }
 
   calculateFaceLocation = (data) => {
     const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
-    const image = document.getElementById('inputImage');
-    const width = Number(image.width);
-    const height = Number(image.height);
+    const width = this.state.imageWidth;
+    const height = this.state.imageHeight;
     return{
       leftCol: clarifaiFace.left_col * width,
       topRow: clarifaiFace.top_row * height,
@@ -67,10 +85,6 @@ class App extends Component {
   onBtnSubmit = () => {
     this.setState({ imageUrl: this.state.input })
     app.models.predict(
-      // Notice that, model ids aren't the same as apiKey
-      // in this case, you can also use
-      //Clarifai.FACE_DETECT_MODEL instead of the key
-      //'a403429f2ddf4b49b307e318f00e528b',
       Clarifai.FACE_DETECT_MODEL,
       // The url
       this.state.input)
