@@ -9,7 +9,7 @@ import ImageLinkForm from './components/imageLinkForm/ImageLinkForm';
 import FaceRecognition from './components/faceRecognition/FaceRecognition';
 
 const app = new Clarifai.App({
-  apiKey: '2de7a50c36dc4a1cbb84740fd02c2eb1',
+  apiKey: '13901b317f664b328f1d8d123271fd5b',
 });
 
 const particlesOptions = {
@@ -40,18 +40,18 @@ class App extends Component {
       imageUrl: '',
       box: {},
       imageWidth: null,
-		  imageHeight: null
+		  imageHeight: null,
+      clarifaiFace: {}
     }
   }
-  //Supposed to make bounding box responsive accordingly
-  //accordingly to the image
   updateDims = () => {
     const image = document.getElementById('inputImage');
 
     this.setState({
         imageWidth: Number(image.width),
         imageHeight: Number(image.height)
-    });
+      });
+      this.displayFaceBox(this.calculateFaceLocationUpdated());
   }
 
   componentDidMount() {
@@ -61,8 +61,21 @@ class App extends Component {
       window.removeEventListener('resize', this.updateDims);
   }
 
+  calculateFaceLocationUpdated = () => {
+    const clarifaiFace = this.state.clarifaiFace;
+    const width = this.state.imageWidth;
+    const height = this.state.imageHeight;
+    return{
+      leftCol: clarifaiFace.left_col * width,
+      topRow: clarifaiFace.top_row * height,
+      rightCol: width - (clarifaiFace.right_col * width),
+      bottomRow: height - (clarifaiFace.bottom_row * height)
+    }
+  }
+
   calculateFaceLocation = (data) => {
-    const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
+    this.setState({clarifaiFace: data.outputs[0].data.regions[0].region_info.bounding_box});
+    const clarifaiFace = this.state.clarifaiFace;
     const width = this.state.imageWidth;
     const height = this.state.imageHeight;
     return{
@@ -109,3 +122,5 @@ class App extends Component {
 }
 
 export default App;
+
+
