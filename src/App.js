@@ -44,6 +44,11 @@ class App extends Component {
       clarifaiFace: {}
     }
   }
+  //Needs to fix bug:
+  //Each property of box is 0 (the box appears around the perimeter of the whole img)
+  //until you re-size the windows and the the box properties are correct
+  //with its according box
+
   updateDims = () => {
     const image = document.getElementById('inputImage');
 
@@ -60,7 +65,8 @@ class App extends Component {
   componentWillUnmount() {
       window.removeEventListener('resize', this.updateDims);
   }
-
+  //Re-scale the box accordingly with the img
+  //Fully responsive
   calculateFaceLocationUpdated = () => {
     const clarifaiFace = this.state.clarifaiFace;
     const width = this.state.imageWidth;
