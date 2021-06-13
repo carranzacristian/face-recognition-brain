@@ -33,6 +33,7 @@ const particlesOptions = {
 }
 
 class App extends Component {
+  _isMounted = false;
   constructor() {
     super();
     this.state = {
@@ -43,10 +44,12 @@ class App extends Component {
 		  imageHeight: null,
       clarifaiFace: {}
     }
+    this.keyPressed = this.keyPressed.bind(this);
   }
   //Needs to fix bug:
-  //Each property of box is 0 (the box appears around the perimeter of the whole img)
-  //until you re-size the windows and the the box properties are correct
+  //When youpaste the URL and click detect after refreshing the page,
+  //each property of box is 0 (the box appears around the perimeter of the whole img),
+  //then when you re-size the windows, the the box properties are correct
   //with its according box
 
   updateDims = () => {
@@ -55,18 +58,38 @@ class App extends Component {
     this.setState({
         imageWidth: Number(image.width),
         imageHeight: Number(image.height)
-      });
-      this.displayFaceBox(this.calculateFaceLocationUpdated());
+      },
+      this.displayFaceBox(this.calculateFaceLocationUpdated())
+      );
   }
 
   componentDidMount() {
-      window.addEventListener('resize', this.updateDims);
+    this._isMounted = true;
+    window.addEventListener('resize', this.updateDims);
   }
   componentWillUnmount() {
-      window.removeEventListener('resize', this.updateDims);
+    this._isMounted = false;
+    window.removeEventListener('resize', this.updateDims);
   }
   //Re-scale the box accordingly with the img
   //Fully responsive
+  
+  calculateFaceLocation = (data) => {
+    let clarifaiFace = null;
+    this.setState({
+      clarifaiFace: data.outputs[0].data.regions[0].region_info.bounding_box},
+      function() {clarifaiFace = this.state.clarifaiFace}
+      );
+    const width = this.state.imageWidth;
+    const height = this.state.imageHeight;
+    return{
+      leftCol: clarifaiFace.left_col * width,
+      topRow: clarifaiFace.top_row * height,
+      rightCol: width - (clarifaiFace.right_col * width),
+      bottomRow: height - (clarifaiFace.bottom_row * height)
+    }
+  }
+  
   calculateFaceLocationUpdated = () => {
     const clarifaiFace = this.state.clarifaiFace;
     const width = this.state.imageWidth;
@@ -78,23 +101,13 @@ class App extends Component {
       bottomRow: height - (clarifaiFace.bottom_row * height)
     }
   }
-
-  calculateFaceLocation = (data) => {
-    this.setState({clarifaiFace: data.outputs[0].data.regions[0].region_info.bounding_box});
-    const clarifaiFace = this.state.clarifaiFace;
-    const width = this.state.imageWidth;
-    const height = this.state.imageHeight;
-    return{
-      leftCol: clarifaiFace.left_col * width,
-      topRow: clarifaiFace.top_row * height,
-      rightCol: width - (clarifaiFace.right_col * width),
-      bottomRow: height - (clarifaiFace.bottom_row * height)
-    }
-  }
-
   displayFaceBox = (box) => {
-    console.log(box);
-    this.setState({box:box});
+    this.setState(
+      {
+        box:box
+      },
+      function() { console.log(box)}
+    )
   }
 
   onInputChange = (event) => {
@@ -102,14 +115,23 @@ class App extends Component {
   }
 
   onBtnSubmit = () => {
-    this.setState({ imageUrl: this.state.input })
-    app.models.predict(
-      Clarifai.FACE_DETECT_MODEL,
-      // The url
-      this.state.input)
-      .then(response =>
-        this.displayFaceBox(this.calculateFaceLocation(response)))
-        .catch(err => console.log(err));
+    this.setState({ imageUrl: this.state.input },
+      function(){
+        app.models.predict(
+          Clarifai.FACE_DETECT_MODEL,
+          // The url
+          this.state.input)
+          .then(response =>
+            this.displayFaceBox(this.calculateFaceLocation(response)))
+            .catch(err => console.log(err));
+      }
+    );
+  }
+  keyPressed(event) {
+    let originalThis = this;
+    if (event.key === "Enter") {
+      originalThis.onBtnSubmit();
+    }
   }
   render() {
     return (
@@ -120,7 +142,7 @@ class App extends Component {
         <Navigation />
         <Rank />
         <Logo />
-        <ImageLinkForm onInputChange={this.onInputChange} onBtnSubmit={this.onBtnSubmit}/>
+        <ImageLinkForm onInputChange={this.onInputChange} onBtnSubmit={this.onBtnSubmit} keyPressed={this.keyPressed}/>
         <FaceRecognition box={this.state.box} imageUrl={this.state.imageUrl} />
       </div>
     );
