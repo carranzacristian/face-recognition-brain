@@ -47,11 +47,15 @@ class App extends Component {
     this.keyPressed = this.keyPressed.bind(this);
   }
   //Needs to fix bug:
-  //When youpaste the URL and click detect after refreshing the page,
-  //each property of box is 0 (the box appears around the perimeter of the whole img),
+  //When you refresh the page -> paste the URL -> click detect,
+  //each property of box is 0
+  //(it console logs {leftCol: 0, topRow: 0, rightCol: 0, bottomRow: 0}
+  //and the box shows around the perimeter of the whole img),
   //then when you re-size the windows, the the box properties are correct
   //with its according box
 
+  // Re-scale the box accordingly with the img
+  // Fully responsive --------{
   updateDims = () => {
     const image = document.getElementById('inputImage');
 
@@ -62,7 +66,6 @@ class App extends Component {
       this.displayFaceBox(this.calculateFaceLocationUpdated())
       );
   }
-
   componentDidMount() {
     this._isMounted = true;
     window.addEventListener('resize', this.updateDims);
@@ -71,9 +74,18 @@ class App extends Component {
     this._isMounted = false;
     window.removeEventListener('resize', this.updateDims);
   }
-  //Re-scale the box accordingly with the img
-  //Fully responsive
-  
+  calculateFaceLocationUpdated = () => {
+    const clarifaiFace = this.state.clarifaiFace;
+    const width = this.state.imageWidth;
+    const height = this.state.imageHeight;
+    return{
+      leftCol: clarifaiFace.left_col * width,
+      topRow: clarifaiFace.top_row * height,
+      rightCol: width - (clarifaiFace.right_col * width),
+      bottomRow: height - (clarifaiFace.bottom_row * height)
+    }
+  }
+  //}--------
   calculateFaceLocation = (data) => {
     let clarifaiFace = null;
     this.setState({
@@ -90,23 +102,12 @@ class App extends Component {
     }
   }
   
-  calculateFaceLocationUpdated = () => {
-    const clarifaiFace = this.state.clarifaiFace;
-    const width = this.state.imageWidth;
-    const height = this.state.imageHeight;
-    return{
-      leftCol: clarifaiFace.left_col * width,
-      topRow: clarifaiFace.top_row * height,
-      rightCol: width - (clarifaiFace.right_col * width),
-      bottomRow: height - (clarifaiFace.bottom_row * height)
-    }
-  }
   displayFaceBox = (box) => {
     this.setState(
       {
         box:box
       },
-      function() { console.log(box)}
+      function() { console.log(box) }
     )
   }
 
@@ -128,9 +129,8 @@ class App extends Component {
     );
   }
   keyPressed(event) {
-    let originalThis = this;
     if (event.key === "Enter") {
-      originalThis.onBtnSubmit();
+      this.onBtnSubmit();
     }
   }
   render() {
