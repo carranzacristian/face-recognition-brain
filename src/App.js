@@ -39,6 +39,7 @@ class App extends Component {
       input: '',
       imageUrl: '',
       box: {},
+      result: {},
       imageWidth: 0,
       imageHeight: 0,
       clarifaiFace: {}
@@ -57,7 +58,7 @@ class App extends Component {
 
   updateDims = () => {
     this.calculateSize()
-    this.displayFaceBox(this.calculateFaceLocationUpdated())
+    this.displayFaceBox(this.calculateFaceLocation(this.state.result))
   }
 
   componentDidMount() {
@@ -118,8 +119,9 @@ class App extends Component {
 
   onBtnSubmit = async () => {
     this.setState({ imageUrl: this.state.input });
-
+    
     let result = await app.models.predict(Clarifai.FACE_DETECT_MODEL, this.state.input)
+    this.setState({ result: result });
     this.displayFaceBox(this.calculateFaceLocation(result))
   }
 
@@ -145,5 +147,3 @@ class App extends Component {
 }
 
 export default App;
-
-
