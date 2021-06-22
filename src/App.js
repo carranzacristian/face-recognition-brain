@@ -38,7 +38,7 @@ class App extends Component {
     this.state = {
       input: '',
       imageUrl: '',
-      box: {},
+      boxes: [],
       result: {},
       imageWidth: 0,
       imageHeight: 0,
@@ -58,7 +58,7 @@ class App extends Component {
 
   updateDims = () => {
     this.calculateSize()
-    this.displayFaceBox(this.calculateFaceLocation(this.state.result))
+    this.displayFaceBoxes(this.calculateFaceLocations(this.state.result))
   }
 
   componentDidMount() {
@@ -69,47 +69,29 @@ class App extends Component {
     window.removeEventListener('resize', this.updateDims);
   }
 
-  calculateFaceLocationUpdated = () => {
-    const clarifaiFace = this.state.clarifaiFace;
-    const width = this.state.imageWidth;
-    const height = this.state.imageHeight;
-
-    return {
-      leftCol: clarifaiFace.left_col * width,
-      topRow: clarifaiFace.top_row * height,
-      rightCol: width - (clarifaiFace.right_col * width),
-      bottomRow: height - (clarifaiFace.bottom_row * height)
-    }
+  calculateFaceLocations = (data) => {
+    return data.outputs[0].data.regions.map(face => {
+      const clarifaiFace = face.region_info.bounding_box;
+      this.calculateSize();
+  
+      const width = this.state.imageWidth;
+      const height = this.state.imageHeight;
+  
+      return {
+        leftCol: clarifaiFace.left_col * width,
+        topRow: clarifaiFace.top_row * height,
+        rightCol: width - (clarifaiFace.right_col * width),
+        bottomRow: height - (clarifaiFace.bottom_row * height)
+      }
+    });
   }
 
-  calculateFaceLocation = (data) => {
-    let clarifaiFace = null;
-
-    this.setState({
-      clarifaiFace: data.outputs[0].data.regions[0].region_info.bounding_box
-    },
-      function () { clarifaiFace = this.state.clarifaiFace }
-    );
-
-    this.calculateSize();
-
-    const width = this.state.imageWidth;
-    const height = this.state.imageHeight;
-
-    return {
-      leftCol: clarifaiFace.left_col * width,
-      topRow: clarifaiFace.top_row * height,
-      rightCol: width - (clarifaiFace.right_col * width),
-      bottomRow: height - (clarifaiFace.bottom_row * height)
-    }
-  }
-
-  displayFaceBox = (box) => {
+  displayFaceBoxes = (boxes) => {
     this.setState(
       {
-        box
+        boxes: boxes
       },
-      function () { console.log(box) }
+      () => console.log(boxes)
     )
   }
 
@@ -122,7 +104,7 @@ class App extends Component {
     
     let result = await app.models.predict(Clarifai.FACE_DETECT_MODEL, this.state.input)
     this.setState({ result: result });
-    this.displayFaceBox(this.calculateFaceLocation(result))
+    this.displayFaceBoxes(this.calculateFaceLocations(result))
   }
 
   keyPressed(event) {
@@ -140,7 +122,7 @@ class App extends Component {
         <Rank />
         <Logo />
         <ImageLinkForm onInputChange={this.onInputChange} onBtnSubmit={this.onBtnSubmit} keyPressed={this.keyPressed} />
-        <FaceRecognition box={this.state.box} imageUrl={this.state.imageUrl} />
+        <FaceRecognition boxes={this.state.boxes} imageUrl={this.state.imageUrl} />
       </div>
     );
   }
