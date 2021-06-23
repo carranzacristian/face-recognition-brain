@@ -57,8 +57,10 @@ class App extends Component {
   }
 
   updateDims = () => {
-    this.calculateSize()
-    this.displayFaceBoxes(this.calculateFaceLocations(this.state.result))
+    if (this.state.boxes.length >= 1){
+      this.calculateSize();
+      this.displayFaceBoxes(this.calculateFaceLocations(this.state.result));
+    }
   }
 
   componentDidMount() {
@@ -118,9 +120,11 @@ class App extends Component {
         <Particles className='particles'
           params={particlesOptions}
         />
-        <Navigation />
+        <div className="Nav" style={{display: 'flex', justifyContent: 'space-between'}}>
+          <Logo />
+          <Navigation />
+        </div>
         <Rank />
-        <Logo />
         <ImageLinkForm onInputChange={this.onInputChange} onBtnSubmit={this.onBtnSubmit} keyPressed={this.keyPressed} />
         <FaceRecognition boxes={this.state.boxes} imageUrl={this.state.imageUrl} />
       </div>
